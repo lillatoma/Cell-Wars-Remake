@@ -10,8 +10,8 @@ public class Cell : MonoBehaviour
     [Tooltip("0 is world, and others are players")]
     public int ownerID = 0; 
     public Color[] ownerColors;
-    public int capacity;
-    public int currentVirusCount;
+    public float capacity;
+    public float currentVirusCount;
     [Header("Modifiers")]
     public float reproductivityMod = 1f;
     public float strengthMod = 1f;
@@ -35,9 +35,24 @@ public class Cell : MonoBehaviour
 
         }
     }
+    [ContextMenu("Update Color")]
     void ChangeInnerCellColor()
     {
         innerCellMeshRenderer.materials[0].SetColor("Color_13fa19b613d94d848f3bcc05dab3ea31", ownerColors[ownerID]);
+    }
+    [ContextMenu("Reassign Material")]
+    public void ReassignMaterial()
+    {
+        innerCellMeshRenderer = innerCell.GetComponent<MeshRenderer>();
+        innerCellMeshRenderer.materials[0] = new Material(innerCellMeshRenderer.materials[0]);
+        ChangeInnerCellColor();
+    }
+
+    public void Damage(float power)
+    {
+        currentVirusCount -= (power / protectionMod);
+        if (currentVirusCount <= 0f)
+            currentVirusCount = 0f;
     }
 
     // Update is called once per frame

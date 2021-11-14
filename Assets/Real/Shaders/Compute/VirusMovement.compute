@@ -1,0 +1,44 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+//RWTexture2D<float4> Result;
+
+struct Virus
+{
+    float3 position;
+    float3 direction;
+    float4 color;
+    float power;
+    float speed;
+    float3 targetPos;
+    float targetSize;
+    int hit; 
+};
+
+RWStructuredBuffer<Virus> viruses;
+float deltaTime;
+
+[numthreads(2,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    Virus virus = viruses[id.x];
+    virus.position = virus.position + virus.direction * virus.speed * deltaTime;
+
+    float3 targetPos = virus.targetPos;
+    [branch] if ((virus.position.x - targetPos.x) * (virus.position.x - targetPos.x) +
+        (virus.position.y - targetPos.y) * (virus.position.y - targetPos.y) +
+        (virus.position.z - targetPos.z) * (virus.position.z - targetPos.z) <= virus.targetSize * virus.targetSize)
+    {
+        virus.hit = 1;
+    }
+
+    viruses[id.x] = virus;
+
+
+
+    // TODO: insert actual code here!
+
+    //Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+}
