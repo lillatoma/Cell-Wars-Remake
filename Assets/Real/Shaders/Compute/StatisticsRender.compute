@@ -1,0 +1,50 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+struct Line
+{
+    float2 a;
+    float2 b;
+    float4 color;
+};
+
+
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+int progress;
+int maxProgress;
+float dotDistance;
+RWTexture2D<float4> Result;
+RWStructuredBuffer<Line> Lines;
+
+void DrawLine(int id)
+{
+    Line _line = Lines[id];
+    float totalLength = length(_line.b - _line.a);
+    float2 dir = (_line.b - _line.a) / totalLength;
+
+    for (float step = 0; step < totalLength; step += dotDistance)
+    {
+        float2 p = _line.a + dir * dotDistance;
+        if (p.y > 0 && Result[p.xy].a < 1)
+        {
+            float alpha = 1;
+            if (1.f * (progress - (id % maxProgress)) / (1.f * maxProgress) < 0.2)
+                alpha = 5.f * (progress - (id % maxProgress)) / (1.f*maxProgress);
+            if (alpha > 1)
+                alpha = 1;
+            Result[p.xy] = float4(_line.color.r, _line.color.g, _line.color.b, alpha);
+        }
+    }
+}
+
+[numthreads(100,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    if(id.x % maxProgress < progress)
+        DrawLine(id.x);
+    // TODO: insert actual code here!
+
+    //Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+}
